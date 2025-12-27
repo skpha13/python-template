@@ -1,0 +1,52 @@
+[project]
+name = "python-template"
+version = "0.1.0"
+description = "Add your description here"
+authors = [{name = "Adrian Mincu."}]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.7",
+    "numpy>=2.3.5",
+    "pandas>=2.3.3",
+    "pydantic>=2.12.5",
+    "scikit-image>=0.25.2",
+    "scikit-learn>=1.7.2",
+    "scipy>=1.16.3",
+    "tqdm>=4.67.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["src", "src.*"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+show_error_codes = true
+pretty = true
+disable_error_code = ["untyped-decorator"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C", "W"]
+ignore = ["F401"]
+exclude = ["__pycache__", "build", "dist", "src.egg-info"]
+
+[tool.ruff.format]
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.0",
+    "pytest>=9.0.1",
+    "ruff>=0.14.8",
+]
