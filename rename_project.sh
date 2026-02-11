@@ -46,11 +46,11 @@ echo "Renaming '$OLD_DIR' -> '$NEW' ..."
 echo "Project name: '$OLD_PROJECT' -> '$NEW_PROJECT'"
 echo ""
 
-# --- 1. Rename the directory ---
+# rename dir
 mv "$OLD_DIR" "$NEW"
 echo "  [ok] Renamed directory: $OLD_DIR/ -> $NEW/"
 
-# --- 2. Update Python imports inside the package ---
+# update python imports
 for f in "$NEW"/*.py; do
     [ -f "$f" ] || continue
     if grep -q "from $OLD_DIR\." "$f" 2>/dev/null || grep -q "import $OLD_DIR\." "$f" 2>/dev/null; then
@@ -59,7 +59,7 @@ for f in "$NEW"/*.py; do
     fi
 done
 
-# --- 3. Update hardcoded project name strings in Python files ---
+# update template strings
 for f in "$NEW"/*.py; do
     [ -f "$f" ] || continue
     if grep -q "$OLD_PROJECT" "$f" 2>/dev/null; then
@@ -68,7 +68,7 @@ for f in "$NEW"/*.py; do
     fi
 done
 
-# --- 4. Update pyproject.toml ---
+# update pyproject.toml
 if [ -f "pyproject.toml" ]; then
     sed -i '' \
         -e "s/name = \"$OLD_PROJECT\"/name = \"$NEW_PROJECT\"/" \
@@ -79,7 +79,7 @@ if [ -f "pyproject.toml" ]; then
     echo "  [ok] Updated pyproject.toml"
 fi
 
-# --- 5. Update the 'd' dev script ---
+# update helper script
 if [ -f "d" ]; then
     sed -i '' "s| $OLD_DIR| $NEW|g" d
     echo "  [ok] Updated d script"
