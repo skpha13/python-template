@@ -206,3 +206,6 @@ marimo/_lsp/
 __marimo__/
 
 data/
+
+# Mac OS temporary file
+*.DS_Store
