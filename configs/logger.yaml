@@ -34,7 +34,7 @@ handlers:
     filename: log
 
 loggers:
-  python-template:
+  root:
     level: INFO
     handlers: [console, file]
     propagate: true

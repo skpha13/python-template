@@ -14,7 +14,7 @@ from src.config import get_settings
 
 settings = get_settings()
 
-_LOGGER_NAME = "python-template"
+_LOGGER_NAME = "root"
 _CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "logger.yaml"
 _BASE_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 
