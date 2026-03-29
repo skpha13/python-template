@@ -8,9 +8,11 @@ requires-python = ">=3.12"
 dependencies = [
     "colorlog>=6.10.1",
     "matplotlib>=3.10.7",
-    "numpy>=2.3.5",
+    "numpy>=2.4.3",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "pyyaml>=6.0.3",
     "scikit-image>=0.25.2",
     "scikit-learn>=1.7.2",
     "scipy>=1.16.3",
@@ -52,4 +54,5 @@ dev = [
     "mypy>=1.19.0",
     "pytest>=9.0.1",
     "ruff>=0.14.8",
+    "types-pyyaml>=6.0.12.20250915",
 ]

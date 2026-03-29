@@ -1,5 +1,8 @@
+from src.logging_config import logger
+
+
 def main() -> None:
-    print("Hello from python-template!")
+    logger.info("Hello from python-template!")
 
 
 if __name__ == "__main__":

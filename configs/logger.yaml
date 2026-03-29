@@ -1,0 +1,40 @@
+# Passed to logging.config.dictConfig(). See:
+# https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  colored:
+    "()": "colorlog.ColoredFormatter"
+    format: "%(asctime)s [%(log_color)s%(levelname)s%(reset)s] %(filename)s: %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors:
+      DEBUG: cyan
+      INFO: green
+      WARNING: yellow
+      ERROR: red
+      CRITICAL: red,bg_white
+
+  file_plain:
+    format: "%(asctime)s [%(levelname)s] %(filename)s: %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: colored
+    stream: ext://sys.stdout
+
+  file:
+    class: logging.FileHandler
+    level: INFO
+    formatter: file_plain
+    # overwritten in code
+    filename: log
+
+loggers:
+  root:
+    level: INFO
+    handlers: [console, file]
+    propagate: true
