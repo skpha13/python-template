@@ -8,7 +8,7 @@ requires-python = ">=3.12"
 dependencies = [
     "colorlog>=6.10.1",
     "matplotlib>=3.10.7",
-    "numpy>=2.3.5",
+    "numpy>=2.4.3",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
