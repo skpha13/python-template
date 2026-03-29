@@ -14,11 +14,28 @@ from src.config import get_settings
 
 settings = get_settings()
 
+
+def _get_log_dir(log_dir: str) -> Path:
+    """
+    Resolve the configured log directory under the base log directory and
+    ensure it cannot escape `_BASE_LOG_DIR` via absolute paths or `..` segments.
+    """
+    candidate = (_BASE_LOG_DIR / log_dir).resolve()
+    try:
+        # raises ValueError if `candidate` is not within `_BASE_LOG_DIR`
+        candidate.relative_to(_BASE_LOG_DIR)
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid log_dir '{log_dir}': must resolve inside '{_BASE_LOG_DIR}'."
+        ) from exc
+    return candidate
+
+
 _LOGGER_NAME = "root"
 _CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "logger.yaml"
 _BASE_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 
-_LOG_DIR = _BASE_LOG_DIR / settings.log_dir
+_LOG_DIR = _get_log_dir(settings.log_dir)
 _LOG_FILENAME = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + ".log"
 _LOG_PATH = _LOG_DIR / _LOG_FILENAME
 

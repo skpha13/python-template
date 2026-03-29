@@ -80,6 +80,48 @@ Non-interactive (same validation rules apply):
 
 The script uses BSD/macOS `sed -i ''` syntax. On GNU/Linux you may need to change those invocations to `sed -i` (no empty argument) in `scripts/rename_project.sh`.
 
+## Environment (`.env`)
+
+Local settings use [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) in `src.config` (`EnvConfig` and `get_settings()`).
+
+- Copy `.env.example` to `.env` in the **project root** (next to `pyproject.toml`). `.env` is gitignored; the example file documents supported keys.
+- The `.env` file path is **anchored to the project root** inside `src.config` (`Path` derived from `config.py`), not the shell’s current working directory, so loading behaves the same no matter where you run `uv run` from.
+
+| Variable | Meaning |
+|----------|---------|
+| `LOG_DIR` | Name of a subdirectory under `logs/` where log files are written. Default: `default`. Must resolve **inside** `logs/` (the app rejects values that try to escape with `..` or absolute paths). |
+
+## Logging
+
+Logging is configured in `configs/logger.yaml` and applied with `logging.config.dictConfig()` when `src.logging_config` is imported.
+
+- The **root** logger gets two handlers: **console** (colored output via [colorlog](https://github.com/borntyping/python-colorlog) on stdout) and **file** (plain text). The YAML is the single schema; the file handler’s path is set in code to:
+
+  `logs/<log_dir>/<YYYY-MM-DD_HH:MM:SS>.log`
+
+  where `<log_dir>` comes from `LOG_DIR` / settings (see above).
+
+- Use `from src.logging_config import logger` for normal log calls.
+
+### `log_performance` decorator
+
+`log_performance` is a **parameterized** decorator: always invoke it with parentheses.
+
+- **`@log_performance()`** — logs when the function **starts** and **finishes**, including elapsed time. No parameter values are logged.
+- **`@log_performance(log_args=[...])`** — same timing logs, and the **start** line also includes the listed parameters by **name** and **`repr` value**. Names must match the wrapped function’s parameters. Names that are not part of the signature are skipped.
+
+```python
+from src.logging_config import log_performance, logger
+
+@log_performance()
+def run_job() -> None:
+    ...
+
+@log_performance(log_args=["x", "y"])
+def run_with_params(x: int, y: str) -> None:
+    ...
+```
+
 ## Layout
 
 | Path | Role |

@@ -1056,7 +1056,6 @@ dependencies = [
     { name = "torch" },
     { name = "torchvision" },
     { name = "tqdm" },
-    { name = "types-pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -1064,6 +1063,7 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -1081,7 +1081,6 @@ requires-dist = [
     { name = "torch", specifier = ">=2.10.0" },
     { name = "torchvision", specifier = ">=0.25.0" },
     { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
 ]
 
 [package.metadata.requires-dev]
@@ -1089,6 +1088,7 @@ dev = [
     { name = "mypy", specifier = ">=1.19.0" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "ruff", specifier = ">=0.14.8" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
 ]
 
 [[package]]
