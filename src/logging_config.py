@@ -1,54 +1,39 @@
+import datetime
+import inspect
 import logging
+import logging.config
 import os
-import sys
 import time
 from functools import wraps
-from typing import Callable, ParamSpec, TypeVar
+from pathlib import Path
+from typing import Any, Callable, ParamSpec, TypeVar
 
-import colorlog
+import yaml
 
-from src.constants import LOG_FILE_PATH
+from src.config import get_settings
 
-logger = logging.getLogger("python-template")
-logger.setLevel(logging.INFO)
+settings = get_settings()
 
-try:
-    os.remove(LOG_FILE_PATH)
-except OSError:
-    pass
+_LOGGER_NAME = "python-template"
+_CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "logger.yaml"
+_BASE_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+
+_LOG_DIR = _BASE_LOG_DIR / settings.log_dir
+_LOG_FILENAME = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + ".log"
+_LOG_PATH = _LOG_DIR / _LOG_FILENAME
+
+os.makedirs(_LOG_DIR, exist_ok=True)
 
 
-if not logger.handlers:
-    handler = colorlog.StreamHandler(sys.stdout)
-    handler_file = logging.FileHandler(LOG_FILE_PATH)
+def _load_dict_config() -> dict[str, Any]:
+    raw = _CONFIG_PATH.read_text(encoding="utf-8")
+    config: dict[str, Any] = yaml.safe_load(raw)
+    config["handlers"]["file"]["filename"] = _LOG_PATH
+    return config
 
-    formatter = colorlog.ColoredFormatter(
-        fmt=(
-            "%(asctime)s "
-            "[%(log_color)s%(levelname)s%(reset)s] "
-            "%(filename)s: %(message)s"
-        ),
-        datefmt="%Y-%m-%d %H:%M:%S",
-        log_colors={
-            "DEBUG": "cyan",
-            "INFO": "green",
-            "WARNING": "yellow",
-            "ERROR": "red",
-            "CRITICAL": "red,bg_white",
-        },
-    )
 
-    formatter_file = logging.Formatter(
-        fmt="%(asctime)s [%(levelname)s] %(filename)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-    handler.setFormatter(formatter)
-    handler_file.setFormatter(formatter_file)
-
-    logger.addHandler(handler)
-    logger.addHandler(handler_file)
-    logger.propagate = True
+logging.config.dictConfig(_load_dict_config())
+logger = logging.getLogger(_LOGGER_NAME)
 
 
 def set_level(level: int) -> None:
@@ -59,14 +44,38 @@ P = ParamSpec("P")
 T = TypeVar("T")
 
 
-def log_performance(fn: Callable[P, T]) -> Callable[P, T]:
-    @wraps(fn)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-        logger.info(f"[{fn.__qualname__}] started.")
-        start = time.monotonic()
-        result = fn(*args, **kwargs)
-        elapsed = time.monotonic() - start
-        logger.info(f"[{fn.__qualname__}] finished in {elapsed:.4f}s")
-        return result
+def log_performance(
+    *, log_args: list[str] | None = None
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    def decorator(fn: Callable[P, T]) -> Callable[P, T]:
+        @wraps(fn)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            selected = {}
+            if log_args:
+                signature = inspect.signature(fn)
+                bound = signature.bind(*args, **kwargs)
+                bound.apply_defaults()
+                selected = {
+                    name: bound.arguments[name]
+                    for name in log_args
+                    if name in bound.arguments
+                }
+            arg_string = (
+                "["
+                + ", ".join([f"{key}={repr(value)}" for key, value in selected.items()])
+                + "]"
+            )
 
-    return wrapper
+            fully_qualified_name = fn.__module__ + "." + fn.__qualname__
+            logger.info(f"[{fully_qualified_name}] started with args: {arg_string}")
+
+            start = time.monotonic()
+            result = fn(*args, **kwargs)
+            elapsed = time.monotonic() - start
+
+            logger.info(f"[{fully_qualified_name}] finished in {elapsed:.4f}s")
+            return result
+
+        return wrapper
+
+    return decorator
