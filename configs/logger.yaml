@@ -22,19 +22,19 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: INFO
+    level: NOTSET
     formatter: colored
     stream: ext://sys.stdout
 
   file:
     class: logging.FileHandler
-    level: INFO
+    level: NOTSET
     formatter: file_plain
     # overwritten in code
     filename: log
 
 loggers:
   root:
-    level: INFO
+    level: NOTSET
     handlers: [console, file]
     propagate: true
