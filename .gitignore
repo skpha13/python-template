@@ -207,7 +207,7 @@ __marimo__/
 
 cache/
 data/
-logs/default
+logs/default/
 
 # Mac OS temporary file
 *.DS_Store
