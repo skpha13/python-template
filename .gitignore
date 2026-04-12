@@ -205,7 +205,9 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+cache/
 data/
+logs/default
 
 # Mac OS temporary file
 *.DS_Store
