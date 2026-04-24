@@ -4,6 +4,7 @@
 
 - Python 3.12 or newer (`requires-python` in `pyproject.toml`)
 - [uv](https://docs.astral.sh/uv/) installed on your PATH
+- To build the optional **C++ extension**: CMake 3.15 or newer and a C++17 toolchain on your PATH (used by [scikit-build-core](https://scikit-build-core.readthedocs.io/))
 
 ## Setup
 
@@ -21,25 +22,37 @@ Initial setup and run:
 
 ```bash
 uv venv                    # create a virtual environment (if you do not use the default uv workflow)
-uv pip install -e .        # install this project in editable mode
-uv run src/main.py         # run the sample entrypoint
+uv pip install -e .        # install in editable mode (compiles the pybind11 module `_hello_cpp` when toolchains are available)
+uv run -m src              # run the package entrypoint (`src/__main__.py`)
 ```
+
+If the native module is missing (no compiler, skipped build, etc.), the app still starts and logs a hint to rebuild with `uv pip install -e .`.
 
 Install tooling used by `./d` and optional tests:
 
 ```bash
-uv sync --group dev        # ruff, mypy, pytest (or use `uv sync --all-groups`)
+uv sync --group dev        # ruff, ty, pytest, pybind11 / scikit-build-core for local builds (or use `uv sync --all-groups`)
 ```
 
 ## Linters and type checking
 
-[ruff](https://docs.astral.sh/ruff/) is the linter and formatter; [mypy](https://mypy.readthedocs.io/en/stable/) performs strict type checking (see `pyproject.toml`).
+[ruff](https://docs.astral.sh/ruff/) is the linter and formatter. [ty](https://github.com/astral-sh/ty) performs static type checking (`ty check`); configuration lives under `[tool.ty.environment]` in `pyproject.toml`. Ruff has `F401` (unused imports) marked **unfixable** so automated fixes do not delete imports you still want for side effects.
+
+[Pyright](https://github.com/microsoft/pyright) settings under `[tool.pyright]` are included for editor-based checking; `reportMissingModuleSource` is disabled for the compiled `_hello_cpp` module, which is described to the type checker via `src/hello_world_cpp/_hello_cpp.pyi` until you build the extension.
 
 After `uv sync --group dev`, run everything in one step:
 
 ```bash
 ./d
 ```
+
+## C++ extension (pybind11)
+
+The template includes a minimal **pybind11** module `_hello_cpp` that exposes `hello_world()` to Python. Sources live under `src/cpp/`; the Python package `src/hello_world_cpp/` imports it and re-exports `hello_world` in `hello_world.py`.
+
+- **Build**: Root `CMakeLists.txt` is driven by **scikit-build-core** (`[build-system]` in `pyproject.toml`). A normal editable install (`uv pip install -e .`) produces the extension next to the package so `from ._hello_cpp import ...` resolves.
+- **Types**: `src/hello_world_cpp/_hello_cpp.pyi` stubs the native module for type checkers and Pyright before or without a local compile.
+- **Package marker**: `src/py.typed` marks the tree as typed for PEP 561 consumers.
 
 ## Package customization
 
@@ -51,7 +64,8 @@ The template ships with a top-level package directory named `src` and a distribu
 - Sets the project name in `pyproject.toml` to a hyphenated form (`my_app` -> `my-app`).
 - Updates `from src.` / `import src.` references in Python files under the renamed folder.
 - Replaces the string `python-template` with the new hyphenated project name where it appears in those files.
-- Adjusts `pyproject.toml` package discovery entries and paths in the `d` script so ruff and mypy still target the right tree.
+- Adjusts `pyproject.toml` package discovery entries and paths in the `d` script so ruff and ty still target the right tree.
+- Updates `CMakeLists.txt` so C++ paths and the `install(... DESTINATION ...)` prefix match the new package directory (for the pybind11 extension).
 
 **How to run it**
 
@@ -75,7 +89,7 @@ Non-interactive (same validation rules apply):
 **After renaming**
 
 - Re-sync the environment if needed: `uv pip install -e .` or `uv sync --group dev`.
-- Run the app with `uv run <your_package>/main.py` instead of `src/main.py`.
+- Run the app with `uv run -m <your_package>` instead of `uv run -m src`.
 - Update the title at the top of this README and any other docs or CI paths that still say `src` or `python-template` if you use them elsewhere.
 
 The script uses BSD/macOS `sed -i ''` syntax. On GNU/Linux you may need to change those invocations to `sed -i` (no empty argument) in `scripts/rename_project.sh`.
@@ -101,7 +115,7 @@ Logging is configured in `configs/logger.yaml` and applied with `logging.config.
 
   where `<log_dir>` comes from `LOG_DIR` / settings (see above).
 
-- Use `from src.logging_config import logger` for normal log calls.
+- Use `from src.logging_config import logger` for normal log calls. Log directory resolution uses `_get_log_dir()` so configured names cannot escape the project `logs/` tree via `..` or absolute paths.
 
 ### `log_performance` decorator
 
@@ -126,10 +140,14 @@ def run_with_params(x: int, y: str) -> None:
 
 | Path | Role |
 |------|------|
-| `src/` | Application package until you rename it (see above) |
-| `pyproject.toml` | Project metadata, dependencies, ruff/mypy/pytest settings |
-| `d` | Helper script: `ruff format`, `ruff check --fix`, `mypy` on the package tree |
-| `scripts/rename_project.sh` | One-shot template -> your package name |
+| `src/` | Application package until you rename it (see above); run with `uv run -m src` |
+| `src/__main__.py` | CLI entry when using `python -m src` / `uv run -m src` |
+| `src/hello_world_cpp/` | Python wrapper around `_hello_cpp` |
+| `src/cpp/` | C++ sources and bindings for pybind11 |
+| `CMakeLists.txt` | CMake project for `_hello_cpp` (used by scikit-build-core) |
+| `pyproject.toml` | Project metadata, dependencies, ruff / ty / pyright / pytest settings |
+| `d` | Helper script: `ruff format`, `ruff check --fix`, `ty check` on the package tree |
+| `scripts/rename_project.sh` | One-shot template -> your package name (including CMake paths) |
 
 ## Tests
 

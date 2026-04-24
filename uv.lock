@@ -962,11 +962,9 @@ dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "pandas" },
-    { name = "pybind11" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pyyaml" },
-    { name = "scikit-build-core" },
     { name = "scikit-image" },
     { name = "scikit-learn" },
     { name = "scipy" },
@@ -977,8 +975,10 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "pybind11" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "scikit-build-core" },
     { name = "ty" },
     { name = "types-pyyaml" },
 ]
@@ -989,11 +989,9 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.7" },
     { name = "numpy", specifier = ">=2.4.3" },
     { name = "pandas", specifier = ">=2.3.3" },
-    { name = "pybind11", specifier = ">=3.0.4" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "scikit-build-core", specifier = ">=0.12.2" },
     { name = "scikit-image", specifier = ">=0.25.2" },
     { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "scipy", specifier = ">=1.16.3" },
@@ -1004,8 +1002,10 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "pybind11", specifier = ">=3.0.4" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "ruff", specifier = ">=0.14.8" },
+    { name = "scikit-build-core", specifier = ">=0.12.2" },
     { name = "ty", specifier = ">=0.0.32" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
 ]
