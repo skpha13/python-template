@@ -1,0 +1,3 @@
+"""Type stubs for the ``_hello_cpp`` pybind11 extension module."""
+
+def hello_world() -> str: ...

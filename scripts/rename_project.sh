@@ -79,6 +79,15 @@ if [ -f "pyproject.toml" ]; then
     echo "  [ok] Updated pyproject.toml"
 fi
 
+# update CMakeLists.txt (native extension paths + install prefix match package dir)
+if [ -f "CMakeLists.txt" ]; then
+    sed -i '' \
+        -e "s|$OLD_DIR/cpp/|$NEW/cpp/|g" \
+        -e "s|DESTINATION $OLD_DIR/|DESTINATION $NEW/|g" \
+        CMakeLists.txt
+    echo "  [ok] Updated CMakeLists.txt"
+fi
+
 # update helper script
 if [ -f "d" ]; then
     sed -i '' "s| $OLD_DIR| $NEW|g" d
@@ -94,4 +103,5 @@ echo "  - Project name:   $OLD_PROJECT -> $NEW_PROJECT"
 echo "  - Imports:        'from $OLD_DIR.' -> 'from $NEW.'"
 echo "  - String literals: '$OLD_PROJECT' -> '$NEW_PROJECT' (in .py files)"
 echo "  - pyproject.toml:  package name + references updated"
+echo "  - CMakeLists.txt:  C++ source paths + install DESTINATION prefix"
 echo "  - d script:        tool targets updated"
