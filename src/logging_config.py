@@ -2,7 +2,6 @@ import datetime
 import inspect
 import logging
 import logging.config
-import os
 import time
 from functools import wraps
 from pathlib import Path
@@ -39,13 +38,15 @@ _LOG_DIR = _get_log_dir(settings.log_dir)
 _LOG_FILENAME = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + ".log"
 _LOG_PATH = _LOG_DIR / _LOG_FILENAME
 
-os.makedirs(_LOG_DIR, exist_ok=True)
 
+def _load_dict_config(path: str | Path | None = None) -> dict[str, Any]:
+    path = Path(path) if path is not None else _LOG_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-def _load_dict_config() -> dict[str, Any]:
     raw = _CONFIG_PATH.read_text(encoding="utf-8")
     config: dict[str, Any] = yaml.safe_load(raw)
-    config["handlers"]["file"]["filename"] = _LOG_PATH
+    config["handlers"]["file"]["filename"] = path
+
     return config
 
 
@@ -55,6 +56,10 @@ logger = logging.getLogger(_LOGGER_NAME)
 
 def set_level(level: int) -> None:
     logger.setLevel(level)
+
+
+def set_path(path: str | Path) -> None:
+    logging.config.dictConfig(_load_dict_config(path=path))
 
 
 P = ParamSpec("P")

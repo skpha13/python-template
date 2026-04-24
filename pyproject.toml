@@ -39,7 +39,7 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "C", "W"]
-ignore = ["F401"]
+unfixable = ["F401"]
 exclude = ["__pycache__", "build", "dist", "src.egg-info"]
 
 [tool.ruff.format]
