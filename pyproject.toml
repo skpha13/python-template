@@ -24,16 +24,6 @@ dependencies = [
 [tool.setuptools.packages.find]
 include = ["src", "src.*"]
 
-[tool.mypy]
-python_version = "3.12"
-strict = true
-check_untyped_defs = true
-disallow_untyped_defs = true
-ignore_missing_imports = true
-show_error_codes = true
-pretty = true
-disable_error_code = ["untyped-decorator"]
-
 [tool.ruff]
 line-length = 88
 
@@ -45,14 +35,17 @@ exclude = ["__pycache__", "build", "dist", "src.egg-info"]
 [tool.ruff.format]
 line-ending = "auto"
 
+[tool.ty.environment]
+python-version = "3.12"
+
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.0",
     "pytest>=9.0.1",
     "ruff>=0.14.8",
+    "ty>=0.0.32",
     "types-pyyaml>=6.0.12.20250915",
 ]

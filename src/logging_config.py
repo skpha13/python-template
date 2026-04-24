@@ -88,7 +88,7 @@ def log_performance(
                 + "]"
             )
 
-            fully_qualified_name = fn.__module__ + "." + fn.__qualname__
+            fully_qualified_name = fn.__module__ + "." + fn.__qualname__  # ty: ignore[unresolved-attribute]
             logger.info(f"[{fully_qualified_name}] started with args: {arg_string}")
 
             start = time.monotonic()
