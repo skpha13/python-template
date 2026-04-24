@@ -2,7 +2,6 @@ import datetime
 import inspect
 import logging
 import logging.config
-import os
 import time
 from functools import wraps
 from pathlib import Path
@@ -15,7 +14,7 @@ from src.config import get_settings
 settings = get_settings()
 
 
-def _get_log_dir(log_dir: str) -> Path:
+def _get_log_dir(log_dir: str | Path) -> Path:
     """
     Resolve the configured log directory under the base log directory and
     ensure it cannot escape `_BASE_LOG_DIR` via absolute paths or `..` segments.
@@ -34,18 +33,19 @@ def _get_log_dir(log_dir: str) -> Path:
 _LOGGER_NAME = "root"
 _CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "logger.yaml"
 _BASE_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
-
 _LOG_DIR = _get_log_dir(settings.log_dir)
-_LOG_FILENAME = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + ".log"
-_LOG_PATH = _LOG_DIR / _LOG_FILENAME
-
-os.makedirs(_LOG_DIR, exist_ok=True)
 
 
-def _load_dict_config() -> dict[str, Any]:
+def _load_dict_config(log_dir: str | Path | None = None) -> dict[str, Any]:
+    log_dir = Path(log_dir) if log_dir is not None else _LOG_DIR
+    log_dir = _get_log_dir(log_dir)
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    log_filename = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + ".log"
     raw = _CONFIG_PATH.read_text(encoding="utf-8")
     config: dict[str, Any] = yaml.safe_load(raw)
-    config["handlers"]["file"]["filename"] = _LOG_PATH
+    config["handlers"]["file"]["filename"] = log_dir / log_filename
+
     return config
 
 
@@ -55,6 +55,10 @@ logger = logging.getLogger(_LOGGER_NAME)
 
 def set_level(level: int) -> None:
     logger.setLevel(level)
+
+
+def set_log_dir(log_dir: str | Path) -> None:
+    logging.config.dictConfig(_load_dict_config(log_dir=log_dir))
 
 
 P = ParamSpec("P")
@@ -83,7 +87,7 @@ def log_performance(
                 + "]"
             )
 
-            fully_qualified_name = fn.__module__ + "." + fn.__qualname__
+            fully_qualified_name = fn.__module__ + "." + fn.__qualname__  # ty: ignore[unresolved-attribute]
             logger.info(f"[{fully_qualified_name}] started with args: {arg_string}")
 
             start = time.monotonic()
