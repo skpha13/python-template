@@ -2,9 +2,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "image-distribution-classifier" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "image-distribution-classifier" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
