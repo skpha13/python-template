@@ -34,7 +34,7 @@ handlers:
     filename: log
 
 loggers:
-  root:
-    level: NOTSET
+  src:
+    level: INFO
     handlers: [console, file]
     propagate: true

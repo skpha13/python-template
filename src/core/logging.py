@@ -5,7 +5,7 @@ import logging.config
 import time
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Any, Callable, ParamSpec, TypeVar, cast
 
 import yaml
 
@@ -30,9 +30,9 @@ def _get_log_dir(log_dir: str | Path) -> Path:
     return candidate
 
 
-_LOGGER_NAME = "root"
-_CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "logger.yaml"
-_BASE_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+_LOGGER_NAME = "src"
+_CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "configs" / "logger.yaml"
+_BASE_LOG_DIR = Path(__file__).resolve().parent.parent.parent / "logs"
 _LOG_DIR = _get_log_dir(settings.log_dir)
 
 
@@ -69,8 +69,7 @@ def log_performance(
     *, log_args: list[str] | None = None
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     def decorator(fn: Callable[P, T]) -> Callable[P, T]:
-        @wraps(fn)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+        def _build_arg_string(*args: P.args, **kwargs: P.kwargs) -> str:
             selected = {}
             if log_args:
                 signature = inspect.signature(fn)
@@ -81,22 +80,41 @@ def log_performance(
                     for name in log_args
                     if name in bound.arguments
                 }
-            arg_string = (
+            return (
                 "["
-                + ", ".join([f"{key}={repr(value)}" for key, value in selected.items()])
+                + ", ".join(f"{key}={repr(value)}" for key, value in selected.items())
                 + "]"
             )
 
-            fully_qualified_name = fn.__module__ + "." + fn.__qualname__  # ty: ignore[unresolved-attribute]
-            logger.info(f"[{fully_qualified_name}] started with args: {arg_string}")
+        fully_qualified_name = fn.__module__ + "." + fn.__qualname__  # ty: ignore[unresolved-attribute]
 
-            start = time.monotonic()
-            result = fn(*args, **kwargs)
-            elapsed = time.monotonic() - start
+        if inspect.iscoroutinefunction(fn):
 
-            logger.info(f"[{fully_qualified_name}] finished in {elapsed:.4f}s")
-            return result
+            @wraps(fn)
+            async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+                logger.info(
+                    f"[{fully_qualified_name}] started with args: "
+                    f"{_build_arg_string(*args, **kwargs)}"
+                )
+                start = time.monotonic()
+                result = await fn(*args, **kwargs)
+                elapsed = time.monotonic() - start
+                logger.info(f"[{fully_qualified_name}] finished in {elapsed:.4f}s")
+                return result
+        else:
 
-        return wrapper
+            @wraps(fn)
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+                logger.info(
+                    f"[{fully_qualified_name}] started with args: "
+                    f"{_build_arg_string(*args, **kwargs)}"
+                )
+                start = time.monotonic()
+                result = fn(*args, **kwargs)
+                elapsed = time.monotonic() - start
+                logger.info(f"[{fully_qualified_name}] finished in {elapsed:.4f}s")
+                return result
+
+        return cast(Callable[P, T], wrapper)
 
     return decorator

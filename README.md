@@ -107,7 +107,7 @@ Local settings use [pydantic-settings](https://docs.pydantic.dev/latest/concepts
 
 ## Logging
 
-Logging is configured in `configs/logger.yaml` and applied with `logging.config.dictConfig()` when `src.logging_config` is imported.
+Logging is configured in `configs/logger.yaml` and applied with `logging.config.dictConfig()` when `src.core.logging` is imported.
 
 - The **root** logger gets two handlers: **console** (colored output via [colorlog](https://github.com/borntyping/python-colorlog) on stdout) and **file** (plain text). The YAML is the single schema; the file handler’s path is set in code to:
 
@@ -115,7 +115,7 @@ Logging is configured in `configs/logger.yaml` and applied with `logging.config.
 
   where `<log_dir>` comes from `LOG_DIR` / settings (see above).
 
-- Use `from src.logging_config import logger` for normal log calls. Log directory resolution uses `_get_log_dir()` so configured names cannot escape the project `logs/` tree via `..` or absolute paths.
+- Use `from src.core.logging import logger` for normal log calls. Log directory resolution uses `_get_log_dir()` so configured names cannot escape the project `logs/` tree via `..` or absolute paths.
 
 ### `log_performance` decorator
 
@@ -125,7 +125,7 @@ Logging is configured in `configs/logger.yaml` and applied with `logging.config.
 - **`@log_performance(log_args=[...])`** — same timing logs, and the **start** line also includes the listed parameters by **name** and **`repr` value**. Names must match the wrapped function’s parameters. Names that are not part of the signature are skipped.
 
 ```python
-from src.logging_config import log_performance, logger
+from src.core.logging import log_performance, logger
 
 @log_performance()
 def run_job() -> None:

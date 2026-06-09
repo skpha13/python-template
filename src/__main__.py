@@ -1,4 +1,4 @@
-from src.logging_config import logger
+from src.core.logging import logger
 
 
 def main() -> None:

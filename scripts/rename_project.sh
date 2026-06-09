@@ -50,23 +50,21 @@ echo ""
 mv "$OLD_DIR" "$NEW"
 echo "  [ok] Renamed directory: $OLD_DIR/ -> $NEW/"
 
-# update python imports
-for f in "$NEW"/*.py; do
-    [ -f "$f" ] || continue
+# update python imports (including nested modules, e.g. core/logging.py)
+while IFS= read -r f; do
     if grep -q "from $OLD_DIR\." "$f" 2>/dev/null || grep -q "import $OLD_DIR\." "$f" 2>/dev/null; then
         sed -i '' "s/from $OLD_DIR\./from $NEW./g; s/import $OLD_DIR\./import $NEW./g" "$f"
         echo "  [ok] Updated imports in: $f"
     fi
-done
+done < <(find "$NEW" -name '*.py')
 
 # update template strings
-for f in "$NEW"/*.py; do
-    [ -f "$f" ] || continue
+while IFS= read -r f; do
     if grep -q "$OLD_PROJECT" "$f" 2>/dev/null; then
         sed -i '' "s/$OLD_PROJECT/$NEW_PROJECT/g" "$f"
         echo "  [ok] Updated project name strings in: $f"
     fi
-done
+done < <(find "$NEW" -name '*.py')
 
 # update pyproject.toml
 if [ -f "pyproject.toml" ]; then
@@ -88,6 +86,19 @@ if [ -f "CMakeLists.txt" ]; then
     echo "  [ok] Updated CMakeLists.txt"
 fi
 
+# update logger config (logger name matches package dir)
+if [ -f "configs/logger.yaml" ]; then
+    sed -i '' "s/^  $OLD_DIR:$/  $NEW:/" configs/logger.yaml
+    echo "  [ok] Updated configs/logger.yaml"
+fi
+
+# update _LOGGER_NAME constant in core/logging.py
+LOGGING_PY="$NEW/core/logging.py"
+if [ -f "$LOGGING_PY" ]; then
+    sed -i '' "s/_LOGGER_NAME = \"$OLD_DIR\"/_LOGGER_NAME = \"$NEW\"/" "$LOGGING_PY"
+    echo "  [ok] Updated _LOGGER_NAME in: $LOGGING_PY"
+fi
+
 # update helper script
 if [ -f "d" ]; then
     sed -i '' "s| $OLD_DIR| $NEW|g" d
@@ -100,8 +111,10 @@ echo ""
 echo "Summary of changes:"
 echo "  - Directory:      $OLD_DIR/ -> $NEW/"
 echo "  - Project name:   $OLD_PROJECT -> $NEW_PROJECT"
-echo "  - Imports:        'from $OLD_DIR.' -> 'from $NEW.'"
+echo "  - Imports:        'from $OLD_DIR.' -> 'from $NEW.' (all .py under package)"
 echo "  - String literals: '$OLD_PROJECT' -> '$NEW_PROJECT' (in .py files)"
 echo "  - pyproject.toml:  package name + references updated"
 echo "  - CMakeLists.txt:  C++ source paths + install DESTINATION prefix"
+echo "  - logger.yaml:     logger name '$OLD_DIR' -> '$NEW'"
+echo "  - logging.py:      _LOGGER_NAME '$OLD_DIR' -> '$NEW'"
 echo "  - d script:        tool targets updated"

@@ -43,12 +43,6 @@ line-ending = "auto"
 [tool.ty.environment]
 python-version = "3.12"
 
-[tool.pyright]
-include = ["src", "tests"]
-pythonVersion = "3.12"
-# extension modules are backed by ``_hello_cpp.pyi`` only until the native module is built.
-reportMissingModuleSource = false
-
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"
